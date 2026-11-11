@@ -1,1 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AStarkTech - MCQ Study & Practice Hub</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .option-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-card:hover:not(.disabled) {
+            transform: translateY(-2px);
+            border-color: #3b82f6;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Top Header Bar -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-xl flex items-center justify-center w-10 h-10 shadow">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-tight text-white">AStarkTech <span class="text-blue-400 font-normal">Quiz</span></h1>
+                    <p class="text-xs text-slate-400">MCQ Study & Self-Assessment</p>
+                </div>
+            </div>
+            <button id="reset-quiz-btn" onclick="showCategorySelection()" class="hidden text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-md border border-slate-700 transition">
+                <i class="fa-solid fa-folder-open mr-1"></i> Change Subject
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- 1. SUBJECT / CATEGORY SELECTION SCREEN -->
+        <section id="category-screen" class="space-y-6">
+            <div class="text-center space-y-2 py-4">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Select a Study Topic</h2>
+                <p class="text-slate-600 max-w-lg mx-auto text-sm sm:text-base">Practice for Tech & General Competitive Exams (SSC, Railway, Banking, UPSC) with detailed explanations.</p>
+            </div>
+
+            <!-- Mode & Filter Controls -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 max-w-3xl mx-auto">
+                <!-- Category Filter Tabs -->
+                <div class="flex items-center bg-slate-100 p-1 rounded-lg w-full sm:w-auto text-xs font-semibold text-slate-600">
+                    <button onclick="filterCategory('all')" id="filter-all" class="px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm">All Topics</button>
+                    <button onclick="filterCategory('general')" id="filter-general" class="px-3 py-1.5 rounded-md hover:text-slate-900">General Exams</button>
+                    <button onclick="filterCategory('tech')" id="filter-tech" class="px-3 py-1.5 rounded-md hover:text-slate-900">Tech & IT</button>
+                </div>
+
+                <!-- Quiz Mode Selector -->
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                    <span class="text-xs font-medium text-slate-500">Mode:</span>
+                    <select id="quiz-mode-select" class="text-xs bg-slate-50 border border-slate-300 font-semibold text-slate-700 py-1.5 px-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="practice">⚡ Practice Mode (Instant Answers)</option>
+                        <option value="exam">📝 Exam Mode (Results at End)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Categories Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto" id="categories-grid">
+                <!-- JS will generate category cards here -->
+            </div>
+        </section>
+
+        <!-- 2. QUIZ PRACTICE SCREEN -->
+        <section id="quiz-screen" class="hidden space-y-5">
+            <!-- Progress & Stats Header -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <!-- Subject Badge & Mode -->
+                <div class="flex items-center space-x-2">
+                    <span id="current-subject-badge" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Subject</span>
+                    <span id="current-mode-badge" class="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded-md">Practice</span>
+                </div>
+
+                <!-- Timer & Score -->
+                <div class="flex items-center space-x-6 text-sm font-semibold">
+                    <div class="flex items-center text-slate-600">
+                        <i class="fa-regular fa-clock mr-1.5 text-blue-500"></i>
+                        <span id="timer-text">00:00</span>
+                    </div>
+                    <div id="live-score-container" class="flex items-center text-slate-600">
+                        <i class="fa-solid fa-trophy mr-1.5 text-amber-500"></i>
+                        <span>Score: <span id="current-score" class="text-blue-600 font-bold">0</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-xs text-slate-500 font-medium">
+                    <span>Progress: <span id="question-number">1</span> of <span id="total-questions">10</span></span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 sm:p-6 space-y-4">
+                    <h3 id="question-text" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                        Question text goes here?
+                    </h3>
+
+                    <!-- Code Snippet Box (if any) -->
+                    <div id="code-snippet-container" class="hidden bg-slate-900 text-emerald-400 p-4 rounded-lg font-mono text-sm overflow-x-auto border border-slate-800">
+                        <pre id="code-snippet"></pre>
+                    </div>
+
+                    <!-- Options Container -->
+                    <div id="options-container" class="space-y-3 pt-2">
+                        <!-- Options generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Explanation Box (Initially Hidden) -->
+                <div id="explanation-box" class="hidden border-t border-slate-200 bg-slate-50 p-5 sm:p-6 space-y-2">
+                    <div class="flex items-center space-x-2 text-slate-900 font-bold">
+                        <i id="explanation-icon" class="fa-solid fa-circle-info text-blue-600"></i>
+                        <h4>Explanation / स्पष्टीकरण</h4>
+                    </div>
+                    <p id="explanation-text" class="text-sm text-slate-700 leading-relaxed">
+                        Explanation details will appear here after answering.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex justify-between items-center pt-2">
+                <button id="prev-btn" onclick="previousQuestion()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium text-sm rounded-lg transition hidden">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Previous
+                </button>
+                <div class="ml-auto flex items-center space-x-2">
+                    <button id="next-btn" onclick="nextQuestion()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm transition flex items-center">
+                        Next Question <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. SCORE SUMMARY & REVIEW SCREEN -->
+        <section id="result-screen" class="hidden space-y-6 max-w-3xl mx-auto py-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6 text-center">
+                <!-- Result Icon/Badge -->
+                <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-3xl border-4 border-blue-100 shadow-inner">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Quiz Completed!</h2>
+                    <p id="result-message" class="text-slate-600 text-sm sm:text-base">Great job testing your skills on AStarkTech!</p>
+                </div>
+
+                <!-- Score Stats Box -->
+                <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Total Score</p>
+                        <p id="final-score" class="text-xl sm:text-2xl font-bold text-blue-600">0/0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Accuracy</p>
+                        <p id="final-accuracy" class="text-xl sm:text-2xl font-bold text-emerald-600">0%</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Time Spent</p>
+                        <p id="final-time" class="text-xl sm:text-2xl font-bold text-slate-700">00:00</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                    <button onclick="restartQuiz()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow transition">
+                        <i class="fa-solid fa-rotate-right mr-2"></i> Retry Quiz
+                    </button>
+                    <button onclick="showCategorySelection()" class="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-lg border border-slate-300 transition">
+                        <i class="fa-solid fa-list-check mr-2"></i> Choose Another Topic
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question Review List -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+                <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 text-left flex items-center justify-between">
+                    <span><i class="fa-solid fa-file-signature text-blue-600 mr-2"></i> Solutions & Answer Review</span>
+                    <span class="text-xs text-slate-500 font-normal">Detailed Breakdown</span>
+                </h3>
+                <div id="review-list-container" class="space-y-4 text-left divide-y divide-slate-100">
+                    <!-- Dynamic review items generated here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>&copy; Ready for astarktech.wordpress.com | MCQ Study & Practice Hub</p>
+            <p class="flex items-center gap-1">
+                Targeting SSC, Railway, Banking & IT Exams
+            </p>
+        </div>
+    </footer>
+
+    <!-- Quiz Logic & Question Data -->
+    <script>
+        // Expanded Question Bank with Tech + General Competitions
+        const quizData = {
+            // --- GENERAL COMPETITION CATEGORIES ---
+            static_gk: {
+                title: "General Awareness & Static GK",
+                group: "general",
+                icon: "fa-landmark",
+                description: "History, Indian Polity, Geography & General Science (SSC / Railway).",
+                questions: [
+                    {
+                        question: "Who among the following was the founder of the Maurya Empire? / मौर्य साम्राज्य के संस्थापक कौन थे?",
+                        options: ["Ashoka (अशोक)", "Chandragupta Maurya (चंद्रगुप्त मौर्य)", "Bindusara (बिंदुसार)", "Harsha (हर्ष)"],
+                        correct: 1,
+                        explanation: "Chandragupta Maurya founded the Maurya Empire in 322 BCE with the assistance of Chanakya (Kautilya)."
+                    },
+                    {
+                        question: "Which Article of the Indian Constitution guarantees the Right to Equality before Law? / भारतीय संविधान का कौन सा अनुच्छेद कानून के समक्ष समानता का अधिकार देता है?",
+                        options: ["Article 14", "Article 19", "Article 21", "Article 32"],
+                        correct: 0,
+                        explanation: "Article 14 of the Constitution of India provides that the State shall not deny equality before the law or equal protection of laws."
+                    },
+                    {
+                        question: "Which planet is known as the 'Red Planet'? / किस ग्रह को 'लाल ग्रह' कहा जाता है?",
+                        options: ["Venus (शुक्र)", "Mars (मंगल)", "Jupiter (बृहस्पति)", "Saturn (शनि)"],
+                        correct: 1,
+                        explanation: "Mars is known as the Red Planet due to the presence of iron oxide (rust) on its surface."
+                    },
+                    {
+                        question: "The Comptroller and Auditor General (CAG) of India is appointed by whom? / भारत के नियंत्रक एवं महालेखा परीक्षक (CAG) की नियुक्ति कौन करता है?",
+                        options: ["Prime Minister", "Chief Justice of India", "President of India", "Parliament"],
+                        correct: 2,
+                        explanation: "Under Article 148 of the Indian Constitution, the CAG is appointed by the President of India."
+                    }
+                ]
+            },
+            quant: {
+                title: "Quantitative Aptitude & Maths",
+                group: "general",
+                icon: "fa-calculator",
+                description: "Arithmetic, Percentage, Profit & Loss, Ratio & Algebra.",
+                questions: [
+                    {
+                        question: "If a sum of money doubles itself in 5 years at simple interest, what is the rate of interest per annum?",
+                        options: ["10%", "15%", "20%", "25%"],
+                        correct: 2,
+                        explanation: "Let Principal = P, Interest = P. Time = 5 years. SI = (P * R * T)/100 => P = (P * R * 5)/100 => R = 100/5 = 20%."
+                    },
+                    {
+                        question: "Find the average of the first 5 prime numbers.",
+                        options: ["5.2", "5.6", "6.8", "7.2"],
+                        correct: 1,
+                        explanation: "First 5 prime numbers are 2, 3, 5, 7, 11. Sum = 28. Average = 28 / 5 = 5.6."
+                    },
+                    {
+                        question: "If A can complete a work in 10 days and B in 15 days, in how many days can they complete it together?",
+                        options: ["5 days", "6 days", "8 days", "9 days"],
+                        correct: 1,
+                        explanation: "1/A + 1/B = 1/10 + 1/15 = 5/30 = 1/6. So together they will finish in 6 days."
+                    }
+                ]
+            },
+            reasoning: {
+                title: "Logical Reasoning",
+                group: "general",
+                icon: "fa-brain",
+                description: "Analogy, Series, Coding-Decoding & Blood Relations.",
+                questions: [
+                    {
+                        question: "Complete the series: 3, 7, 15, 31, 63, ?",
+                        options: ["95", "115", "127", "131"],
+                        correct: 2,
+                        explanation: "Pattern: Next number = (Current number * 2) + 1. So (63 * 2) + 1 = 127."
+                    },
+                    {
+                        question: "If 'CAT' is coded as 24 and 'DOG' as 26, then 'PIG' will be coded as?",
+                        options: ["32", "30", "36", "28"],
+                        correct: 0,
+                        explanation: "Sum of alphabetical positions: P(16) + I(9) + G(7) = 32."
+                    },
+                    {
+                        question: "Pointing to a photograph, Rahul said, 'She is the daughter of my grandfather's only son.' How is the girl related to Rahul?",
+                        options: ["Mother", "Sister", "Cousin", "Aunt"],
+                        correct: 1,
+                        explanation: "Grandfather's only son = Rahul's father. Daughter of Rahul's father = Rahul's Sister."
+                    }
+                ]
+            },
+            english: {
+                title: "English Language & Grammar",
+                group: "general",
+                icon: "fa-book-open-reader",
+                description: "Synonyms, Antonyms, Error Spotting & Idioms.",
+                questions: [
+                    {
+                        question: "Select the synonym of the word: 'CANDID'",
+                        options: ["Secretive", "Frank", "Dishonest", "Arrogant"],
+                        correct: 1,
+                        explanation: "'Candid' means truthful and straightforward. Frank is the closest synonym."
+                    },
+                    {
+                        question: "Identify the part of sentence containing an error: 'She has been studying in this college since three years.'",
+                        options: ["She has been", "studying in", "this college", "since three years"],
+                        correct: 3,
+                        explanation: "For a period/duration of time ('three years'), we use 'for' instead of 'since'. The correct phrase is 'for three years'."
+                    },
+                    {
+                        question: "What is the meaning of the idiom: 'To spill the beans'?",
+                        options: ["To waste food", "To reveal a secret", "To start a fight", "To work hard"],
+                        correct: 1,
+                        explanation: "'To spill the beans' means to disclose secret information prematurely or unintentionally."
+                    }
+                ]
+            },
+
+            // --- TECH CATEGORIES ---
+            webdev: {
+                title: "Web Development",
+                group: "tech",
+                icon: "fa-code",
+                description: "HTML5, CSS3, JavaScript ES6+, and Web Concepts.",
+                questions: [
+                    {
+                        question: "Which HTML5 element is used to specify a footer for a document or section?",
+                        options: ["&lt;bottom&gt;", "&lt;footer&gt;", "&lt;section&gt;", "&lt;aside&gt;"],
+                        correct: 1,
+                        explanation: "The &lt;footer&gt; tag defines a footer for a document or section, typically containing author information, copyright data, or contact details."
+                    },
+                    {
+                        question: "What is the correct CSS syntax to make all &lt;p&gt; elements bold?",
+                        options: ["p {text-size: bold;}", "p {font-weight: bold;}", "&lt;p style='text-size:bold'&gt;", "p {style: bold;}"],
+                        correct: 1,
+                        explanation: "The CSS property 'font-weight: bold;' is used to increase the thickness or weight of fonts."
+                    },
+                    {
+                        question: "What will the following JavaScript code output?",
+                        code: "console.log(typeof NaN);",
+                        options: ["'number'", "'undefined'", "'NaN'", "'object'"],
+                        correct: 0,
+                        explanation: "In JavaScript, NaN (Not-a-Number) is technically classified as a numeric type according to the IEEE 754 standard spec."
+                    }
+                ]
+            },
+            compbasics: {
+                title: "Computer Fundamentals & IT",
+                group: "tech",
+                icon: "fa-microchip",
+                description: "Hardware, Operating Systems, Networking & Storage.",
+                questions: [
+                    {
+                        question: "Which unit performs arithmetic and logical operations inside the CPU?",
+                        options: ["Control Unit (CU)", "Arithmetic Logic Unit (ALU)", "Memory Management Unit (MMU)", "Registers"],
+                        correct: 1,
+                        explanation: "The ALU (Arithmetic Logic Unit) handles all arithmetic calculations (addition, subtraction) and logical comparisons."
+                    },
+                    {
+                        question: "What does RAM stand for?",
+                        options: ["Read Access Memory", "Random Access Memory", "Rapid Action Module", "Realtime Array Storage"],
+                        correct: 1,
+                        explanation: "RAM stands for Random Access Memory. It is volatile high-speed memory used to store data currently in active use."
+                    }
+                ]
+            }
+        };
+
+        // Quiz State Variables
+        let currentSubjectKey = null;
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = []; // Store selected index per question
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let currentFilter = 'all';
+        let quizMode = 'practice'; // 'practice' or 'exam'
+
+        // Initialize App
+        window.onload = function() {
+            renderCategories();
+        };
+
+        // Filter categories tab click
+        function filterCategory(group) {
+            currentFilter = group;
+            ['all', 'general', 'tech'].forEach(type => {
+                const btn = document.getElementById(`filter-${type}`);
+                if (type === group) {
+                    btn.className = "px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm font-bold";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-md hover:text-slate-900 font-normal";
+                }
+            });
+            renderCategories();
+        }
+
+        // Render Categories Screen
+        function renderCategories() {
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = '';
+
+            Object.keys(quizData).forEach(key => {
+                const category = quizData[key];
+                if (currentFilter !== 'all' && category.group !== currentFilter) return;
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl border border-slate-200 hover:border-blue-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between group";
+                card.onclick = () => startQuiz(key);
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:bg-blue-600 group-hover:text-white transition">
+                            <i class="fa-solid ${category.icon}"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 class="font-bold text-slate-900 text-base group-hover:text-blue-600 transition">${category.title}</h3>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">${category.description}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
+                        <span>${category.questions.length} Questions</span>
+                        <span class="text-blue-600 group-hover:translate-x-1 transition-transform flex items-center gap-1 font-semibold">
+                            Start Quiz <i class="fa-solid fa-arrow-right"></i>
+                        </span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Switch to Category Selection Screen
+        function showCategorySelection() {
+            clearInterval(timerInterval);
+            document.getElementById('category-screen').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('reset-quiz-btn').classList.add('hidden');
+        }
+
+        // Start Quiz Procedure
+        function startQuiz(subjectKey) {
+            currentSubjectKey = subjectKey;
+            currentQuestions = quizData[subjectKey].questions;
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+            secondsElapsed = 0;
+            quizMode = document.getElementById('quiz-mode-select').value;
+
+            // UI Adjustments
+            document.getElementById('category-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('reset-quiz-btn').classList.remove('hidden');
+            document.getElementById('current-subject-badge').textContent = quizData[subjectKey].title;
+            
+            const modeBadge = document.getElementById('current-mode-badge');
+            const scoreBox = document.getElementById('live-score-container');
+
+            if (quizMode === 'exam') {
+                modeBadge.textContent = "Exam Mode";
+                modeBadge.className = "bg-rose-100 text-rose-800 text-xs font-semibold px-2 py-0.5 rounded-md";
+                scoreBox.classList.add('hidden'); // Hide live score in exam mode
+            } else {
+                modeBadge.textContent = "Practice Mode";
+                modeBadge.className = "bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-0.5 rounded-md";
+                scoreBox.classList.remove('hidden');
+            }
+
+            startTimer();
+            loadQuestion();
+        }
+
+        // Timer Logic
+        function startTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer-text').textContent = "00:00";
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer-text').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // Load Question Data into DOM
+        function loadQuestion() {
+            const q = currentQuestions[currentQuestionIndex];
+
+            // Progress Update
+            document.getElementById('question-number').textContent = currentQuestionIndex + 1;
+            document.getElementById('total-questions').textContent = currentQuestions.length;
+            const progress = Math.round(((currentQuestionIndex) / currentQuestions.length) * 100);
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-percent').textContent = `${progress}%`;
+
+            // Question & Code Snippet
+            document.getElementById('question-text').innerHTML = q.question;
+            const codeContainer = document.getElementById('code-snippet-container');
+            if (q.code) {
+                codeContainer.classList.remove('hidden');
+                document.getElementById('code-snippet').textContent = q.code;
+            } else {
+                codeContainer.classList.add('hidden');
+            }
+
+            // Options Box
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const isAnswered = userAnswers[currentQuestionIndex] !== null;
+
+            q.options.forEach((opt, index) => {
+                const optCard = document.createElement('div');
+                optCard.className = `option-card border border-slate-200 rounded-lg p-3.5 flex items-center justify-between cursor-pointer select-none text-sm font-medium`;
+
+                const letter = String.fromCharCode(65 + index); // A, B, C, D
+                let statusIcon = '';
+
+                if (quizMode === 'practice') {
+                    // Practice Mode Logic: Instant Feedback
+                    if (isAnswered) {
+                        optCard.classList.add('disabled', 'cursor-default');
+                        const selected = userAnswers[currentQuestionIndex];
+                        if (index === q.correct) {
+                            optCard.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                            statusIcon = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>`;
+                        } else if (index === selected) {
+                            optCard.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                            statusIcon = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>`;
+                        } else {
+                            optCard.classList.add('bg-slate-50', 'text-slate-400');
+                        }
+                    } else {
+                        optCard.classList.add('bg-white', 'text-slate-700', 'hover:bg-blue-50/50');
+                        optCard.onclick = () => selectOption(index);
+                    }
+                } else {
+                    // Exam Mode Logic: Selection only
+                    const selected = userAnswers[currentQuestionIndex];
+                    if (selected === index) {
+                        optCard.classList.add('bg-blue-50', 'border-blue-600', 'text-blue-900', 'font-bold');
+                        statusIcon = `<i class="fa-solid fa-circle-dot text-blue-600 text-lg"></i>`;
+                    } else {
+                        optCard.classList.add('bg-white', 'text-slate-700', 'hover:bg-slate-50');
+                    }
+                    optCard.onclick = () => selectOption(index);
+                }
+
+                optCard.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center font-semibold text-xs text-slate-600 border border-slate-200">
+                            ${letter}
+                        </span>
+                        <span>${opt}</span>
+                    </div>
+                    <div>${statusIcon}</div>
+                `;
+
+                optionsContainer.appendChild(optCard);
+            });
+
+            // Explanation Box (Only in Practice Mode after answering)
+            const explanationBox = document.getElementById('explanation-box');
+            if (quizMode === 'practice' && isAnswered) {
+                explanationBox.classList.remove('hidden');
+                document.getElementById('explanation-text').innerHTML = q.explanation;
+            } else {
+                explanationBox.classList.add('hidden');
+            }
+
+            // Update Navigation buttons
+            document.getElementById('prev-btn').classList.toggle('hidden', currentQuestionIndex === 0);
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (currentQuestionIndex === currentQuestions.length - 1) {
+                nextBtn.innerHTML = `Submit Test <i class="fa-solid fa-check-double ml-2"></i>`;
+            } else {
+                nextBtn.innerHTML = `Next Question <i class="fa-solid fa-arrow-right ml-2"></i>`;
+            }
+
+            // Score Counter (for practice mode)
+            document.getElementById('current-score').textContent = score;
+        }
+
+        // Option Click Handler
+        function selectOption(index) {
+            if (quizMode === 'practice' && userAnswers[currentQuestionIndex] !== null) return;
+
+            userAnswers[currentQuestionIndex] = index;
+            
+            // Recalculate score for practice mode
+            if (quizMode === 'practice') {
+                score = 0;
+                userAnswers.forEach((ans, qIdx) => {
+                    if (ans === currentQuestions[qIdx].correct) score++;
+                });
+            }
+
+            loadQuestion();
+        }
+
+        // Navigate Next / Finish
+        function nextQuestion() {
+            if (userAnswers[currentQuestionIndex] === null) {
+                const options = document.getElementById('options-container');
+                options.classList.add('animate-pulse');
+                setTimeout(() => options.classList.remove('animate-pulse'), 500);
+                return;
+            }
+
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        // Navigate Previous
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        // Finish Quiz & Show Summary
+        function finishQuiz() {
+            clearInterval(timerInterval);
+
+            // Calculate final score for Exam Mode
+            score = 0;
+            userAnswers.forEach((ans, index) => {
+                if (ans === currentQuestions[index].correct) {
+                    score++;
+                }
+            });
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const total = currentQuestions.length;
+            const accuracy = Math.round((score / total) * 100);
+
+            // Set Stats
+            document.getElementById('final-score').textContent = `${score}/${total}`;
+            document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+
+            const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('final-time').textContent = `${mins}:${secs}`;
+
+            // Result Message Customization
+            const resultMsg = document.getElementById('result-message');
+            if (accuracy === 100) {
+                resultMsg.textContent = "Outstanding performance! Perfect Score!";
+            } else if (accuracy >= 70) {
+                resultMsg.textContent = "Great job! You passed with high accuracy.";
+            } else {
+                resultMsg.textContent = "Keep practicing! Review the solutions below and try again.";
+            }
+
+            renderReviewList();
+        }
+
+        // Render Comprehensive Review Breakdown
+        function renderReviewList() {
+            const reviewContainer = document.getElementById('review-list-container');
+            reviewContainer.innerHTML = '';
+
+            currentQuestions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.correct;
+                const reviewItem = document.createElement('div');
+                reviewItem.className = "pt-4 first:pt-0 space-y-2";
+
+                reviewItem.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <h4 class="font-semibold text-slate-900 text-sm">
+                            <span class="text-slate-400 font-normal">Q${idx + 1}.</span> ${q.question}
+                        </h4>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded ${isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            ${isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                    </div>
+
+                    <div class="text-xs space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p class="text-slate-600"><strong>Your Answer:</strong> <span class="${isCorrect ? 'text-emerald-700 font-semibold' : 'text-rose-700 font-semibold'}">${userAns !== null ? q.options[userAns] : 'Not Answered'}</span></p>
+                        ${!isCorrect ? `<p class="text-slate-600"><strong>Correct Answer:</strong> <span class="text-emerald-700 font-semibold">${q.options[q.correct]}</span></p>` : ''}
+                        <p class="text-slate-500 pt-1.5 border-t border-slate-200"><strong>Explanation:</strong> ${q.explanation}</p>
+                    </div>
+                `;
+
+                reviewContainer.appendChild(reviewItem);
+            });
+        }
+
+        // Restart Current Quiz
+        function restartQuiz() {
+            startQuiz(currentSubjectKey);
+        }
+    </script>
+</body>
+</html>
